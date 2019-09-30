@@ -1,5 +1,5 @@
 
-import React, { Fragment } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import { withTranslation } from 'react-i18next';
 
@@ -13,27 +13,57 @@ class Customize extends React.Component {
     const { t } = this.props;
 
     return (
-      <Fragment>
-        {/* fieldset + legend ではなく、row + header + フォームコンポーネントに書き換える(GC244着手時に対応) */}
-        <fieldset>
-          <legend>{t('customize_page.Layout')}</legend>
-          {/* レイアウトフォームの react componentをここで呼ぶ(GW-244) */}
-          <legend>{t('customize_page.Theme')}</legend>
-          {/* テーマフォームの react componentをここで呼ぶ(GW-245) */}
-          <legend>{t('customize_page.Behavior')}</legend>
-          {/* 挙動フォームの react componentをここで呼ぶ(GW-246) */}
-          <legend>{t('customize_page.Function')}</legend>
-          {/* 機能フォームの react componentをここで呼ぶ(GW-276) */}
-          <legend>{t('customize_page.Code Highlight')}</legend>
-          {/* コードハイライトフォームの react componentをここで呼ぶ(GW-277) */}
-          <legend>{t('customize_page.custom_title')}</legend>
-          {/* カスタムタイトルフォームの react componentをここで呼ぶ(GW-278) */}
-          <legend>{t('customize_page.Custom CSS')}</legend>
-          {/* カスタムCSSフォームの react componentをここで呼ぶ(GW-279) */}
-          <legend>{t('customize_page.Custom script')}</legend>
-          {/* カスタムスクリプトフォームの react componentをここで呼ぶ(GW-280) */}
-        </fieldset>
-      </Fragment>
+      // fieldset + legend ではなく、row + header + フォームコンポーネントに書き換える(GC244着手時に対応)
+      <div className="row">
+        <div className="col-md-12">
+          <legend>
+            <h3>{t('customize_page.Layout')}</h3>
+          </legend>
+        </div>
+        {/* レイアウトフォームの react componentをここで呼ぶ(GW-244) */}
+        <div className="col-md-12">
+          <legend>
+            <h3>{t('customize_page.Theme')}</h3>
+          </legend>
+        </div>
+        {/* テーマフォームの react componentをここで呼ぶ(GW-245) */}
+        <div className="col-md-12">
+          <legend>
+            <h3>{t('customize_page.Behavior')}</h3>
+          </legend>
+        </div>
+        {/* 挙動フォームの react componentをここで呼ぶ(GW-246) */}
+        <div className="col-md-12">
+          <legend>
+            <h3>{t('customize_page.Function')}</h3>
+          </legend>
+        </div>
+        {/* 機能フォームの react componentをここで呼ぶ(GW-276) */}
+        <div className="col-md-12">
+          <legend>
+            <h3>{t('customize_page.Code Highlight')}</h3>
+          </legend>
+        </div>
+        {/* コードハイライトフォームの react componentをここで呼ぶ(GW-277) */}
+        <div className="col-md-12">
+          <legend>
+            <h3>{t('customize_page.custom_title')} </h3>
+          </legend>
+        </div>
+        {/* カスタムタイトルフォームの react componentをここで呼ぶ(GW-278) */}
+        <div className="col-md-12">
+          <legend>
+            <h3>{t('customize_page.Custom CSS')}</h3>
+          </legend>
+        </div>
+        {/* カスタムCSSフォームの react componentをここで呼ぶ(GW-279) */}
+        <div className="col-md-12">
+          <legend>
+            <h3>{t('customize_page.Custom script')} </h3>
+          </legend>
+        </div>
+        {/* カスタムスクリプトフォームの react componentをここで呼ぶ(GW-280) */}
+      </div>
     );
   }
 
