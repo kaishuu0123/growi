@@ -1,9 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import Button from 'react-bootstrap/es/Button';
-import Modal from 'react-bootstrap/es/Modal';
-import Checkbox from 'react-bootstrap/es/Checkbox';
+import Button from 'react-bootstrap/Button';
+import Modal from 'react-bootstrap/Modal';
+import Checkbox from 'react-bootstrap/Checkbox';
 
 export default class DeletePageListModal extends React.Component {
 

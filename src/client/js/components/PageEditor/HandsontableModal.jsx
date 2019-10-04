@@ -1,9 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Modal from 'react-bootstrap/es/Modal';
-import Button from 'react-bootstrap/es/Button';
-import ButtonGroup from 'react-bootstrap/es/ButtonGroup';
-import Collapse from 'react-bootstrap/es/Collapse';
+import Modal from 'react-bootstrap/Modal';
+import Button from 'react-bootstrap/Button';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import Collapse from 'react-bootstrap/Collapse';
 import Handsontable from 'handsontable';
 import { HotTable } from '@handsontable/react';
 import { debounce } from 'throttle-debounce';
@@ -450,10 +450,10 @@ export default class HandsontableModal extends React.PureComponent {
         </Modal.Body>
         <Modal.Footer>
           <div className="d-flex justify-content-between">
-            <Button bsStyle="danger" onClick={this.reset}>Reset</Button>
+            <Button variant="danger" onClick={this.reset}>Reset</Button>
             <div className="d-flex">
-              <Button bsStyle="default" onClick={this.cancel}>Cancel</Button>
-              <Button bsStyle="primary" onClick={this.save}>Done</Button>
+              <Button variant="secondary" onClick={this.cancel}>Cancel</Button>
+              <Button variant="primary" onClick={this.save}>Done</Button>
             </div>
           </div>
         </Modal.Footer>

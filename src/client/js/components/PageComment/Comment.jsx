@@ -3,10 +3,10 @@ import PropTypes from 'prop-types';
 
 import { format, formatDistanceStrict } from 'date-fns';
 
-import Button from 'react-bootstrap/es/Button';
-import Tooltip from 'react-bootstrap/es/Tooltip';
-import OverlayTrigger from 'react-bootstrap/es/OverlayTrigger';
-import Collapse from 'react-bootstrap/es/Collapse';
+import Button from 'react-bootstrap/Button';
+import Tooltip from 'react-bootstrap/Tooltip';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Collapse from 'react-bootstrap/Collapse';
 
 import AppContainer from '../../services/AppContainer';
 import PageContainer from '../../services/PageContainer';
@@ -202,7 +202,7 @@ class Comment extends React.Component {
     const toggleButtonLabel = isOlderRepliesShown ? '' : 'more';
     const toggleButton = (
       <Button
-        bsStyle="link"
+        variant="link"
         className="page-comments-list-toggle-older"
         onClick={() => { this.setState({ isOlderRepliesShown: !isOlderRepliesShown }) }}
       >

@@ -2,11 +2,11 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { withTranslation } from 'react-i18next';
 
-import FormGroup from 'react-bootstrap/es/FormGroup';
-import Button from 'react-bootstrap/es/Button';
-import DropdownButton from 'react-bootstrap/es/DropdownButton';
-import MenuItem from 'react-bootstrap/es/MenuItem';
-import InputGroup from 'react-bootstrap/es/InputGroup';
+import FormGroup from 'react-bootstrap/FormGroup';
+import Button from 'react-bootstrap/Button';
+import DropdownButton from 'react-bootstrap/DropdownButton';
+import MenuItem from 'react-bootstrap/MenuItem';
+import InputGroup from 'react-bootstrap/InputGroup';
 
 import SearchForm from './SearchForm';
 
@@ -82,7 +82,7 @@ class HeaderSearchBox extends React.Component {
             placeholder="Search ..."
           />
           <InputGroup.Button className="btn-group-submit-search">
-            <Button bsStyle="link" onClick={this.search}>
+            <Button variant="link" onClick={this.search}>
               <i className="icon-magnifier"></i>
             </Button>
           </InputGroup.Button>

@@ -3,12 +3,12 @@ import PropTypes from 'prop-types';
 
 import { withTranslation } from 'react-i18next';
 
-import FormGroup from 'react-bootstrap/es/FormGroup';
-import FormControl from 'react-bootstrap/es/FormControl';
-import ControlLabel from 'react-bootstrap/es/ControlLabel';
+import FormGroup from 'react-bootstrap/FormGroup';
+import FormControl from 'react-bootstrap/FormControl';
+import ControlLabel from 'react-bootstrap/ControlLabel';
 
-import Dropdown from 'react-bootstrap/es/Dropdown';
-import MenuItem from 'react-bootstrap/es/MenuItem';
+import Dropdown from 'react-bootstrap/Dropdown';
+import MenuItem from 'react-bootstrap/MenuItem';
 
 import { createSubscribedElement } from '../UnstatedUtils';
 import EditorContainer from '../../services/EditorContainer';

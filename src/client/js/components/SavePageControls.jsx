@@ -3,9 +3,9 @@ import PropTypes from 'prop-types';
 
 import { withTranslation } from 'react-i18next';
 
-import ButtonToolbar from 'react-bootstrap/es/ButtonToolbar';
-import SplitButton from 'react-bootstrap/es/SplitButton';
-import MenuItem from 'react-bootstrap/es/MenuItem';
+import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
+import SplitButton from 'react-bootstrap/SplitButton';
+import MenuItem from 'react-bootstrap/MenuItem';
 
 import PageContainer from '../services/PageContainer';
 import AppContainer from '../services/AppContainer';
@@ -102,7 +102,7 @@ class SavePageControls extends React.Component {
         <ButtonToolbar>
           <SplitButton
             id="spl-btn-submit"
-            bsStyle="primary"
+            variant="primary"
             className="btn-submit"
             dropup
             pullRight

@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import React from 'react';
-import Button from 'react-bootstrap/es/Button';
-import Modal from 'react-bootstrap/es/Modal';
+import Button from 'react-bootstrap/Button';
+import Modal from 'react-bootstrap/Modal';
 
 import UserPicture from '../User/UserPicture';
 import Username from '../User/Username';
@@ -82,7 +82,7 @@ export default class DeleteAttachmentModal extends React.Component {
           </div>
           <Button
             onClick={this._onDeleteConfirm}
-            bsStyle="danger"
+            variant="danger"
             disabled={this.props.deleting}
           >Delete!
           </Button>
