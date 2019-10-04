@@ -4,7 +4,6 @@ module.exports = function(crowi, app) {
   const logger = require('@alias/logger')('growi:routes:admin');
 
   const models = crowi.models;
-  const Page = models.Page;
   const User = models.User;
   const ExternalAccount = models.ExternalAccount;
   const UserGroup = models.UserGroup;
@@ -18,6 +17,7 @@ module.exports = function(crowi, app) {
     aclService,
     slackNotificationService,
     customizeService,
+    exportService,
   } = crowi;
 
   const recommendedWhitelist = require('@commons/service/xss/recommended-whitelist');
@@ -131,17 +131,17 @@ module.exports = function(crowi, app) {
 
   // app.post('/admin/markdown/lineBreaksSetting' , admin.markdown.lineBreaksSetting);
   actions.markdown.lineBreaksSetting = async function(req, res) {
-    const markdownSetting = req.form.markdownSetting;
 
-    if (req.form.isValid) {
-      await configManager.updateConfigsInTheSameNamespace('markdown', markdownSetting);
-      req.flash('successMessage', ['Successfully updated!']);
+    const array = req.body.params;
+
+    try {
+      await configManager.updateConfigsInTheSameNamespace('markdown', array);
+      return res.json(ApiResponse.success());
     }
-    else {
-      req.flash('errorMessage', req.form.errors);
+    catch (err) {
+      return res.json(ApiResponse.error(err));
     }
 
-    return res.redirect('/admin/markdown');
   };
 
   // app.post('/admin/markdown/presentationSetting' , admin.markdown.presentationSetting);
@@ -335,14 +335,14 @@ module.exports = function(crowi, app) {
     let setting;
 
     switch (form.notifyToType) {
-      case 'mail':
+      case GlobalNotificationSetting.TYPE.MAIL:
         setting = new GlobalNotificationMailSetting(crowi);
         setting.toEmail = form.toEmail;
         break;
-      // case 'slack':
-      //   setting = new GlobalNotificationSlackSetting(crowi);
-      //   setting.slackChannels = form.slackChannels;
-      //   break;
+      case GlobalNotificationSetting.TYPE.SLACK:
+        setting = new GlobalNotificationSlackSetting(crowi);
+        setting.slackChannels = form.slackChannels;
+        break;
       default:
         logger.error('GlobalNotificationSetting Type Error: undefined type');
         req.flash('errorMessage', 'Error occurred in creating a new global notification setting: undefined notification type');
@@ -358,24 +358,44 @@ module.exports = function(crowi, app) {
 
   actions.globalNotification.update = async(req, res) => {
     const form = req.form.notificationGlobal;
-    const setting = await GlobalNotificationSetting.findOne({ _id: form.id });
+
+    const models = {
+      [GlobalNotificationSetting.TYPE.MAIL]: GlobalNotificationMailSetting,
+      [GlobalNotificationSetting.TYPE.SLACK]: GlobalNotificationSlackSetting,
+    };
+
+    let setting = await GlobalNotificationSetting.findOne({ _id: form.id });
+    setting = setting.toObject();
+
+    // when switching from one type to another,
+    // remove toEmail from slack setting and slackChannels from mail setting
+    if (setting.__t !== form.notifyToType) {
+      setting = models[setting.__t].hydrate(setting);
+      setting.toEmail = undefined;
+      setting.slackChannels = undefined;
+      await setting.save();
+      setting = setting.toObject();
+    }
 
     switch (form.notifyToType) {
-      case 'mail':
+      case GlobalNotificationSetting.TYPE.MAIL:
+        setting = GlobalNotificationMailSetting.hydrate(setting);
         setting.toEmail = form.toEmail;
         break;
-      // case 'slack':
-      //   setting.slackChannels = form.slackChannels;
-      //   break;
+      case GlobalNotificationSetting.TYPE.SLACK:
+        setting = GlobalNotificationSlackSetting.hydrate(setting);
+        setting.slackChannels = form.slackChannels;
+        break;
       default:
         logger.error('GlobalNotificationSetting Type Error: undefined type');
         req.flash('errorMessage', 'Error occurred in updating the global notification setting: undefined notification type');
         return res.redirect('/admin/notification#global-notification');
     }
 
+    setting.__t = form.notifyToType;
     setting.triggerPath = form.triggerPath;
     setting.triggerEvents = getNotificationEvents(form);
-    setting.save();
+    await setting.save();
 
     return res.redirect('/admin/notification#global-notification');
   };
@@ -424,7 +444,7 @@ module.exports = function(crowi, app) {
 
     const result = await User.findUsersWithPagination({
       page,
-      select: User.USER_PUBLIC_FIELDS,
+      select: `${User.USER_PUBLIC_FIELDS} lastLoginAt`,
       populate: User.IMAGE_POPULATION,
     });
 
@@ -437,34 +457,6 @@ module.exports = function(crowi, app) {
       userUpperLimit,
       isUserCountExceedsUpperLimit,
     });
-  };
-  api.validators = {};
-  actions.user.api = api;
-
-  api.validators.inviteEmail = [
-    // isEmail prevents line breaks, so use isString
-    check('emailInputValue').isString(/.+@.+\..+/).withMessage('Error. Valid email address is required'),
-  ];
-
-  actions.user.invite = async function(req, res) {
-
-    const { validationResult } = require('express-validator');
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.json(ApiResponse.error('Valid email address is required'));
-    }
-
-    const array = req.body.emailInputValue.split('\n');
-    const emailList = array.filter((element) => { return element.match(/.+@.+\..+/) });
-    const shapedEmailList = emailList.map((email) => { return email.trim() });
-
-    try {
-      const emailList = await User.createUsersByInvitation(shapedEmailList, req.body.sendEmail);
-      return emailList;
-    }
-    catch (err) {
-      return res.json(ApiResponse.error(err));
-    }
   };
 
   actions.user.makeAdmin = function(req, res) {
@@ -537,43 +529,6 @@ module.exports = function(crowi, app) {
         return res.redirect('/admin/users');
       });
     });
-  };
-
-  actions.user.remove = function(req, res) {
-    const id = req.params.id;
-    let username = '';
-
-    return new Promise((resolve, reject) => {
-      User.findById(id, (err, userData) => {
-        username = userData.username;
-        return resolve(userData);
-      });
-    })
-      .then((userData) => {
-        return new Promise((resolve, reject) => {
-          userData.statusDelete((err, userData) => {
-            if (err) {
-              reject(err);
-            }
-            resolve(userData);
-          });
-        });
-      })
-      .then((userData) => {
-      // remove all External Accounts
-        return ExternalAccount.remove({ user: userData }).then(() => { return userData });
-      })
-      .then((userData) => {
-        return Page.removeByPath(`/user/${username}`).then(() => { return userData });
-      })
-      .then((userData) => {
-        req.flash('successMessage', `${username} さんのアカウントを削除しました`);
-        return res.redirect('/admin/users');
-      })
-      .catch((err) => {
-        req.flash('errorMessage', '削除に失敗しました。');
-        return res.redirect('/admin/users');
-      });
   };
 
   // これやったときの relation の挙動未確認
@@ -710,6 +665,7 @@ module.exports = function(crowi, app) {
   // Importer management
   actions.importer = {};
   actions.importer.api = api;
+  api.validators = {};
   api.validators.importer = {};
 
   actions.importer.index = function(req, res) {
@@ -735,6 +691,27 @@ module.exports = function(crowi, app) {
     return validator;
   };
 
+
+  // Export management
+  actions.export = {};
+  actions.export.index = (req, res) => {
+    return res.render('admin/export');
+  };
+
+  actions.export.download = (req, res) => {
+    // TODO: add express validator
+    const { fileName } = req.params;
+
+    try {
+      const zipFile = exportService.getFile(fileName);
+      return res.download(zipFile);
+    }
+    catch (err) {
+      // TODO: use ApiV3Error
+      logger.error(err);
+      return res.json(ApiResponse.error());
+    }
+  };
 
   actions.api = {};
   actions.api.appSetting = async function(req, res) {
@@ -806,7 +783,7 @@ module.exports = function(crowi, app) {
     }
   };
 
-  actions.api.securityPassportLdapSetting = function(req, res) {
+  actions.api.securityPassportLocalSetting = async function(req, res) {
     const form = req.form.settingForm;
 
     if (!req.form.isValid) {
@@ -814,19 +791,48 @@ module.exports = function(crowi, app) {
     }
 
     debug('form content', form);
-    return configManager.updateConfigsInTheSameNamespace('crowi', form)
-      .then(() => {
-        // reset strategy
-        crowi.passportService.resetLdapStrategy();
-        // setup strategy
-        if (configManager.getConfig('crowi', 'security:passport-ldap:isEnabled')) {
-          crowi.passportService.setupLdapStrategy(true);
-        }
-        return;
-      })
-      .then(() => {
-        res.json({ status: true });
-      });
+
+    try {
+      await configManager.updateConfigsInTheSameNamespace('crowi', form);
+      // reset strategy
+      crowi.passportService.resetLocalStrategy();
+      // setup strategy
+      if (configManager.getConfig('crowi', 'security:passport-local:isEnabled')) {
+        crowi.passportService.setupLocalStrategy(true);
+      }
+    }
+    catch (err) {
+      logger.error(err);
+      return res.json({ status: false, message: err.message });
+    }
+
+    return res.json({ status: true });
+  };
+
+  actions.api.securityPassportLdapSetting = async function(req, res) {
+    const form = req.form.settingForm;
+
+    if (!req.form.isValid) {
+      return res.json({ status: false, message: req.form.errors.join('\n') });
+    }
+
+    debug('form content', form);
+
+    try {
+      await configManager.updateConfigsInTheSameNamespace('crowi', form);
+      // reset strategy
+      crowi.passportService.resetLdapStrategy();
+      // setup strategy
+      if (configManager.getConfig('crowi', 'security:passport-ldap:isEnabled')) {
+        crowi.passportService.setupLdapStrategy(true);
+      }
+    }
+    catch (err) {
+      logger.error(err);
+      return res.json({ status: false, message: err.message });
+    }
+
+    return res.json({ status: true });
   };
 
   actions.api.securityPassportSamlSetting = async(req, res) => {
@@ -1209,38 +1215,14 @@ module.exports = function(crowi, app) {
       return res.json(ApiResponse.error('ElasticSearch Integration is not set up.'));
     }
 
-    // first, delete index
-    try {
-      await search.deleteIndex();
-    }
-    catch (err) {
-      logger.warn('Delete index Error, but if it is initialize, its ok.', err);
-    }
-
-    // second, create index
-    try {
-      await search.buildIndex();
-    }
-    catch (err) {
-      logger.error('Error', err);
-      return res.json(ApiResponse.error(err));
-    }
-
     searchEvent.on('addPageProgress', (total, current, skip) => {
       crowi.getIo().sockets.emit('admin:addPageProgress', { total, current, skip });
     });
     searchEvent.on('finishAddPage', (total, current, skip) => {
       crowi.getIo().sockets.emit('admin:finishAddPage', { total, current, skip });
     });
-    // add all page
-    search
-      .addAllPages()
-      .then(() => {
-        debug('Data is successfully indexed. ------------------ ✧✧');
-      })
-      .catch((err) => {
-        logger.error('Error', err);
-      });
+
+    await search.buildIndex();
 
     return res.json(ApiResponse.success());
   };

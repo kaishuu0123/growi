@@ -22,6 +22,10 @@ const { toPagingLimit, toPagingOffset } = require('../../util/express-validator/
  */
 
 module.exports = (crowi) => {
+  const loginRequiredStrictly = require('../../middleware/login-required')(crowi);
+  const adminRequired = require('../../middleware/admin-required')(crowi);
+  const csrf = require('../../middleware/csrf')(crowi);
+
   const {
     ErrorV3,
     UserGroup,
@@ -31,12 +35,6 @@ module.exports = (crowi) => {
   } = crowi.models;
   const { ApiV3FormValidator } = crowi.middlewares;
 
-  const {
-    loginRequired,
-    adminRequired,
-    csrfVerify: csrf,
-  } = require('../../util/middlewares')(crowi);
-
   /**
    * @swagger
    *
@@ -45,8 +43,6 @@ module.exports = (crowi) => {
    *      get:
    *        tags: [UserGroup]
    *        description: Get usergroups
-   *        produces:
-   *          - application/json
    *        responses:
    *          200:
    *            description: usergroups are fetched
@@ -58,7 +54,7 @@ module.exports = (crowi) => {
    *                      type: object
    *                      description: a result of `UserGroup.find`
    */
-  router.get('/', loginRequired(), adminRequired, async(req, res) => {
+  router.get('/', loginRequiredStrictly, adminRequired, async(req, res) => {
     // TODO: filter with querystring
     try {
       const page = parseInt(req.query.page) || 1;
@@ -85,8 +81,6 @@ module.exports = (crowi) => {
    *      post:
    *        tags: [UserGroup]
    *        description: Adds userGroup
-   *        produces:
-   *          - application/json
    *        requestBody:
    *          required: true
    *          content:
@@ -107,7 +101,7 @@ module.exports = (crowi) => {
    *                      type: object
    *                      description: A result of `UserGroup.createGroupByName`
    */
-  router.post('/', loginRequired(), adminRequired, csrf, validator.create, ApiV3FormValidator, async(req, res) => {
+  router.post('/', loginRequiredStrictly, adminRequired, csrf, validator.create, ApiV3FormValidator, async(req, res) => {
     const { name } = req.body;
 
     try {
@@ -133,18 +127,17 @@ module.exports = (crowi) => {
    * @swagger
    *
    *  paths:
-   *    /_api/v3/user-groups/{:id}:
+   *    /_api/v3/user-groups/{id}:
    *      delete:
    *        tags: [UserGroup]
    *        description: Deletes userGroup
-   *        produces:
-   *          - application/json
    *        parameters:
-   *          - name: deleteGroupId
+   *          - name: id
    *            in: path
+   *            required: true
    *            description: id of userGroup
    *            schema:
-   *              type: ObjectId
+   *              type: string
    *          - name: actionName
    *            in: query
    *            description: name of action
@@ -154,7 +147,7 @@ module.exports = (crowi) => {
    *            in: query
    *            description: userGroup id that will be transferred to
    *            schema:
-   *              type: ObjectId
+   *              type: string
    *        responses:
    *          200:
    *            description: userGroup is removed
@@ -166,7 +159,7 @@ module.exports = (crowi) => {
    *                      type: object
    *                      description: A result of `UserGroup.removeCompletelyById`
    */
-  router.delete('/:id', loginRequired(), adminRequired, csrf, validator.delete, ApiV3FormValidator, async(req, res) => {
+  router.delete('/:id', loginRequiredStrictly, adminRequired, csrf, validator.delete, ApiV3FormValidator, async(req, res) => {
     const { id: deleteGroupId } = req.params;
     const { actionName, transferToUserGroupId } = req.query;
 
@@ -194,19 +187,17 @@ module.exports = (crowi) => {
    * @swagger
    *
    *  paths:
-   *    /_api/v3/user-groups/{:id}:
+   *    /_api/v3/user-groups/{id}:
    *      put:
    *        tags: [UserGroup]
    *        description: Update userGroup
-   *        produces:
-   *          - application/json
    *        parameters:
    *          - name: id
    *            in: path
    *            required: true
    *            description: id of userGroup
    *            schema:
-   *              type: ObjectId
+   *              type: string
    *        responses:
    *          200:
    *            description: userGroup is updated
@@ -218,7 +209,7 @@ module.exports = (crowi) => {
    *                      type: object
    *                      description: A result of `UserGroup.updateName`
    */
-  router.put('/:id', loginRequired(), adminRequired, csrf, validator.update, ApiV3FormValidator, async(req, res) => {
+  router.put('/:id', loginRequiredStrictly, adminRequired, csrf, validator.update, ApiV3FormValidator, async(req, res) => {
     const { id } = req.params;
     const { name } = req.body;
 
@@ -251,18 +242,17 @@ module.exports = (crowi) => {
    * @swagger
    *
    *  paths:
-   *    /_api/v3/user-groups/{:id}/users:
+   *    /_api/v3/user-groups/{id}/users:
    *      get:
    *        tags: [UserGroup]
    *        description: Get users related to the userGroup
-   *        produces:
-   *          - application/json
    *        parameters:
    *          - name: id
    *            in: path
+   *            required: true
    *            description: id of userGroup
    *            schema:
-   *              type: ObjectId
+   *              type: string
    *        responses:
    *          200:
    *            description: users are fetched
@@ -276,7 +266,7 @@ module.exports = (crowi) => {
    *                        type: object
    *                      description: user objects
    */
-  router.get('/:id/users', loginRequired(), adminRequired, async(req, res) => {
+  router.get('/:id/users', loginRequiredStrictly, adminRequired, async(req, res) => {
     const { id } = req.params;
 
     try {
@@ -300,18 +290,17 @@ module.exports = (crowi) => {
    * @swagger
    *
    *  paths:
-   *    /_api/v3/user-groups/{:id}/unrelated-users:
+   *    /_api/v3/user-groups/{id}/unrelated-users:
    *      get:
    *        tags: [UserGroup]
    *        description: Get users unrelated to the userGroup
-   *        produces:
-   *          - application/json
    *        parameters:
    *          - name: id
    *            in: path
+   *            required: true
    *            description: id of userGroup
    *            schema:
-   *              type: ObjectId
+   *              type: string
    *        responses:
    *          200:
    *            description: users are fetched
@@ -325,7 +314,7 @@ module.exports = (crowi) => {
    *                        type: object
    *                      description: user objects
    */
-  router.get('/:id/unrelated-users', loginRequired(), adminRequired, async(req, res) => {
+  router.get('/:id/unrelated-users', loginRequiredStrictly, adminRequired, async(req, res) => {
     const { id } = req.params;
 
     try {
@@ -350,21 +339,15 @@ module.exports = (crowi) => {
    * @swagger
    *
    *  paths:
-   *    /_api/v3/user-groups/{:id}/users:
+   *    /_api/v3/user-groups/{id}/users:
    *      post:
    *        tags: [UserGroup]
    *        description: Add a user to the userGroup
-   *        produces:
-   *          - application/json
    *        parameters:
    *          - name: id
    *            in: path
+   *            required: true
    *            description: id of userGroup
-   *            schema:
-   *              type: ObjectId
-   *          - name: username
-   *            in: path
-   *            description: id of user
    *            schema:
    *              type: string
    *        responses:
@@ -385,7 +368,7 @@ module.exports = (crowi) => {
    *                      type: object
    *                      description: the associative entity between user and userGroup
    */
-  router.post('/:id/users/:username', loginRequired(), adminRequired, validator.users.post, ApiV3FormValidator, async(req, res) => {
+  router.post('/:id/users/:username', loginRequiredStrictly, adminRequired, validator.users.post, ApiV3FormValidator, async(req, res) => {
     const { id, username } = req.params;
 
     try {
@@ -415,21 +398,15 @@ module.exports = (crowi) => {
    * @swagger
    *
    *  paths:
-   *    /_api/v3/user-groups/{:id}/users:
+   *    /_api/v3/user-groups/{id}/users:
    *      delete:
    *        tags: [UserGroup]
    *        description: remove a user from the userGroup
-   *        produces:
-   *          - application/json
    *        parameters:
    *          - name: id
    *            in: path
+   *            required: true
    *            description: id of userGroup
-   *            schema:
-   *              type: ObjectId
-   *          - name: username
-   *            in: path
-   *            description: id of user
    *            schema:
    *              type: string
    *        responses:
@@ -450,7 +427,7 @@ module.exports = (crowi) => {
    *                      type: object
    *                      description: the associative entity between user and userGroup
    */
-  router.delete('/:id/users/:username', loginRequired(), adminRequired, validator.users.delete, ApiV3FormValidator, async(req, res) => {
+  router.delete('/:id/users/:username', loginRequiredStrictly, adminRequired, validator.users.delete, ApiV3FormValidator, async(req, res) => {
     const { id, username } = req.params;
 
     try {
@@ -481,18 +458,17 @@ module.exports = (crowi) => {
    * @swagger
    *
    *  paths:
-   *    /_api/v3/user-groups/{:id}/user-group-relations:
+   *    /_api/v3/user-groups/{id}/user-group-relations:
    *      get:
    *        tags: [UserGroup]
    *        description: Get the user group relations for the userGroup
-   *        produces:
-   *          - application/json
    *        parameters:
    *          - name: id
    *            in: path
+   *            required: true
    *            description: id of userGroup
    *            schema:
-   *              type: ObjectId
+   *              type: string
    *        responses:
    *          200:
    *            description: user group relations are fetched
@@ -506,7 +482,7 @@ module.exports = (crowi) => {
    *                        type: object
    *                      description: userGroupRelation objects
    */
-  router.get('/:id/user-group-relations', loginRequired(), adminRequired, async(req, res) => {
+  router.get('/:id/user-group-relations', loginRequiredStrictly, adminRequired, async(req, res) => {
     const { id } = req.params;
 
     try {
@@ -534,18 +510,17 @@ module.exports = (crowi) => {
    * @swagger
    *
    *  paths:
-   *    /_api/v3/user-groups/{:id}/pages:
+   *    /_api/v3/user-groups/{id}/pages:
    *      get:
    *        tags: [UserGroup]
    *        description: Get closed pages for the userGroup
-   *        produces:
-   *          - application/json
    *        parameters:
    *          - name: id
    *            in: path
+   *            required: true
    *            description: id of userGroup
    *            schema:
-   *              type: ObjectId
+   *              type: string
    *        responses:
    *          200:
    *            description: pages are fetched
@@ -559,7 +534,7 @@ module.exports = (crowi) => {
    *                        type: object
    *                      description: page objects
    */
-  router.get('/:id/pages', loginRequired(), adminRequired, validator.pages.get, ApiV3FormValidator, async(req, res) => {
+  router.get('/:id/pages', loginRequiredStrictly, adminRequired, validator.pages.get, ApiV3FormValidator, async(req, res) => {
     const { id } = req.params;
     const { limit, offset } = req.query;
 
