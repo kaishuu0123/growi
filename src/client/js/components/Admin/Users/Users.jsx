@@ -2,87 +2,40 @@ import React, { Fragment } from 'react';
 import PropTypes from 'prop-types';
 import { withTranslation } from 'react-i18next';
 
-import { toastSuccess, toastError } from '../../../util/apiNotification';
-
 import PasswordResetModal from './PasswordResetModal';
 import PaginationWrapper from '../../PaginationWrapper';
 import InviteUserControl from './InviteUserControl';
 import UserTable from './UserTable';
 
 import { createSubscribedElement } from '../../UnstatedUtils';
+import { toastError } from '../../../util/apiNotification';
+
 import AppContainer from '../../../services/AppContainer';
+import AdminUsersContainer from '../../../services/AdminUsersContainer';
 
 class UserPage extends React.Component {
 
   constructor(props) {
     super();
 
-    this.state = {
-      userForPasswordResetModal: null,
-      users: [],
-      activePage: 1,
-      pagingLimit: Infinity,
-      isPasswordResetModalShown: false,
-    };
-
-    this.removeUser = this.removeUser.bind(this);
-    this.showPasswordResetModal = this.showPasswordResetModal.bind(this);
-    this.hidePasswordResetModal = this.hidePasswordResetModal.bind(this);
+    this.handlePage = this.handlePage.bind(this);
   }
 
-  // TODO unstatedContainerを作ってそこにリファクタすべき
-  componentDidMount() {
-    const data = document.getElementById('admin-user-page');
-    const users = JSON.parse(data.getAttribute('users'));
-
-    this.setState({
-      users,
-    });
-  }
-
-  async removeUser(user) {
-
-    const { appContainer } = this.props;
-
+  async handlePage(selectedPage) {
     try {
-      const response = await appContainer.apiv3.delete(`/users/${user._id}/remove`);
-      const { username } = response.data.userData;
-      toastSuccess(`Delete ${username} success`);
+      await this.props.adminUsersContainer.retrieveUsersByPagingNum(selectedPage);
     }
     catch (err) {
       toastError(err);
     }
   }
 
-  /**
-   * passwordリセットモーダルが開き、userが渡される
-   * @param {object} user
-   *
-   */
-  showPasswordResetModal(user) {
-    this.setState({
-      isPasswordResetModalShown: true,
-      userForPasswordResetModal: user,
-    });
-  }
-
-  hidePasswordResetModal() {
-    this.setState({ isPasswordResetModalShown: false });
-  }
-
-
   render() {
-    const { t } = this.props;
+    const { t, adminUsersContainer } = this.props;
 
     return (
       <Fragment>
-        { this.state.userForPasswordResetModal && (
-          <PasswordResetModal
-            user={this.state.userForPasswordResetModal}
-            show={this.state.isPasswordResetModalShown}
-            onHideModal={this.hidePasswordResetModal}
-          />
-        ) }
+        {adminUsersContainer.state.userForPasswordResetModal && <PasswordResetModal />}
         <p>
           <InviteUserControl />
           <a className="btn btn-default btn-outline ml-2" href="/admin/users/external-accounts">
@@ -90,16 +43,12 @@ class UserPage extends React.Component {
             { t('user_management.external_account') }
           </a>
         </p>
-        <UserTable
-          users={this.state.users}
-          onPasswordResetClicked={this.showPasswordResetModal}
-          removeUser={this.removeUser}
-        />
+        <UserTable />
         <PaginationWrapper
-          activePage={this.state.activePage}
-          changePage={this.handlePage} // / TODO GW-314 create function
-          totalItemsCount={this.state.users.length} // TODO GW-314 props.userTotalCount
-          pagingLimit={this.state.pagingLimit}
+          activePage={adminUsersContainer.state.activePage}
+          changePage={this.handlePage}
+          totalItemsCount={adminUsersContainer.state.totalUsers}
+          pagingLimit={adminUsersContainer.state.pagingLimit}
         />
       </Fragment>
     );
@@ -108,12 +57,13 @@ class UserPage extends React.Component {
 }
 
 const UserPageWrapper = (props) => {
-  return createSubscribedElement(UserPage, props, [AppContainer]);
+  return createSubscribedElement(UserPage, props, [AppContainer, AdminUsersContainer]);
 };
 
 UserPage.propTypes = {
   t: PropTypes.func.isRequired, // i18next
   appContainer: PropTypes.instanceOf(AppContainer).isRequired,
+  adminUsersContainer: PropTypes.instanceOf(AdminUsersContainer).isRequired,
 
 };
 
