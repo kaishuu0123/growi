@@ -5,9 +5,12 @@ import Button from 'react-bootstrap/es/Button';
 import urljoin from 'url-join';
 import * as codemirror from 'codemirror';
 
+import ot from 'ot-es.js';
+
 import { UnControlled as ReactCodeMirror } from 'react-codemirror2';
 
 import InterceptorManager from '@commons/service/interceptor-manager';
+import WebsocketContainer from '../../services/WebsocketContainer';
 
 import AbstractEditor from './AbstractEditor';
 import SimpleCheatsheet from './SimpleCheatsheet';
@@ -125,6 +128,39 @@ export default class CodeMirrorEditor extends AbstractEditor {
     // set keymap
     const keymapMode = this.props.editorOptions.keymapMode;
     this.setKeymapMode(keymapMode);
+
+    this.setupWebsocketEventHandler();
+  }
+
+  setupWebsocketEventHandler() {
+    const EditorClient = ot.EditorClient;
+    const SocketIOAdapter = ot.SocketIOAdapter;
+    const AjaxAdapter = ot.AjaxAdapter;
+    const CodeMirrorAdapter = ot.CodeMirrorAdapter;
+
+    const socket = this.props.websocketContainer.getWebSocket();
+    // const { pageContainer } = this.props;
+    // const { pageId } = pageContainer.state;
+    socket.emit('ot:connect', {
+      pageId: 'Hoge',
+      pageContent: this.state.value,
+      username: 'HOGEFUGA',
+    });
+
+
+    const cm = this.cm.editor;
+
+    socket.on('doc', (obj) => {
+      const { str, revision, clients } = obj;
+      cm.setValue(str);
+      this.props.onChange(str);
+
+      window.cmClient = new EditorClient(
+        revision, clients,
+        new SocketIOAdapter(socket),
+        new CodeMirrorAdapter(cm),
+      );
+    });
   }
 
   componentWillReceiveProps(nextProps) {
@@ -826,6 +862,7 @@ CodeMirrorEditor.propTypes = Object.assign({
   emojiStrategy: PropTypes.object,
   lineNumbers: PropTypes.bool,
   onMarkdownHelpButtonClicked: PropTypes.func,
+  websocketContainer: PropTypes.instanceOf(WebsocketContainer),
 }, AbstractEditor.propTypes);
 CodeMirrorEditor.defaultProps = {
   lineNumbers: true,

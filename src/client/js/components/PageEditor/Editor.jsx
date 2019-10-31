@@ -7,6 +7,7 @@ import Modal from 'react-bootstrap/es/Modal';
 import Dropzone from 'react-dropzone';
 
 import EditorContainer from '../../services/EditorContainer';
+import WebsocketContainer from '../../services/WebsocketContainer';
 
 import Cheatsheet from './Cheatsheet';
 import AbstractEditor from './AbstractEditor';
@@ -367,4 +368,5 @@ Editor.propTypes = Object.assign({
   emojiStrategy: PropTypes.object,
   onChange: PropTypes.func,
   onUpload: PropTypes.func,
+  websocketContainer: PropTypes.instanceOf(WebsocketContainer),
 }, AbstractEditor.propTypes);
