@@ -38,7 +38,6 @@ function Crowi(rootdir) {
 
   this.config = {};
   this.configManager = null;
-  this.searcher = null;
   this.mailer = {};
   this.passportService = null;
   this.globalNotificationService = null;
@@ -51,6 +50,7 @@ function Crowi(rootdir) {
   this.growiBridgeService = null;
   this.exportService = null;
   this.importService = null;
+  this.searchService = null;
   this.cdnResourcesService = new CdnResourcesService();
   this.interceptorManager = new InterceptorManager();
   this.xss = new Xss();
@@ -133,19 +133,19 @@ Crowi.prototype.initForTest = async function() {
   ]);
 
   await Promise.all([
-  //   this.scanRuntimeVersions(),
-  //   this.setupPassport(),
-  //   this.setupSearcher(),
-  //   this.setupMailer(),
-  //   this.setupSlack(),
-  //   this.setupCsrf(),
-  //   this.setUpFileUpload(),
+    // this.scanRuntimeVersions(),
+    this.setupPassport(),
+    // this.setupSearcher(),
+    // this.setupMailer(),
+    // this.setupSlack(),
+    // this.setupCsrf(),
+    // this.setUpFileUpload(),
     this.setUpAcl(),
-  //   this.setUpCustomize(),
-  //   this.setUpRestQiitaAPI(),
-  //   this.setupUserGroup(),
-  //   this.setupExport(),
-  //   this.setupImport(),
+    // this.setUpCustomize(),
+    // this.setUpRestQiitaAPI(),
+    // this.setupUserGroup(),
+    // this.setupExport(),
+    // this.setupImport(),
   ]);
 
   // globalNotification depends on slack and mailer
@@ -282,10 +282,6 @@ Crowi.prototype.scanRuntimeVersions = async function() {
   });
 };
 
-Crowi.prototype.getSearcher = function() {
-  return this.searcher;
-};
-
 Crowi.prototype.getMailer = function() {
   return this.mailer;
 };
@@ -333,21 +329,8 @@ Crowi.prototype.setupPassport = async function() {
 };
 
 Crowi.prototype.setupSearcher = async function() {
-  const self = this;
-  const searcherUri = this.env.ELASTICSEARCH_URI
-    || this.env.BONSAI_URL
-    || null;
-
-  if (searcherUri) {
-    try {
-      self.searcher = new (require(path.join(self.libDir, 'util', 'search')))(self, searcherUri);
-      self.searcher.initIndices();
-    }
-    catch (e) {
-      logger.error('Error on setup searcher', e);
-      self.searcher = null;
-    }
-  }
+  const SearchService = require('@server/service/search');
+  this.searchService = new SearchService(this);
 };
 
 Crowi.prototype.setupMailer = async function() {

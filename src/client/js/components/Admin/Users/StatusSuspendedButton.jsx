@@ -20,7 +20,7 @@ class StatusSuspendedButton extends React.Component {
 
     try {
       const username = await this.props.adminUsersContainer.deactivateUser(this.props.user._id);
-      toastSuccess(t('user_management.deactivate_user_success', { username }));
+      toastSuccess(t('toaster.deactivate_user_success', { username }));
     }
     catch (err) {
       toastError(err);
@@ -32,7 +32,7 @@ class StatusSuspendedButton extends React.Component {
 
     return (
       <a className="px-4" onClick={() => { this.onClickDeactiveBtn() }}>
-        <i className="icon-fw icon-ban"></i> { t('user_management.deactivate_account') }
+        <i className="icon-fw icon-ban"></i> {t('admin:user_management.user_table.deactivate_account')}
       </a>
     );
   }
@@ -42,19 +42,19 @@ class StatusSuspendedButton extends React.Component {
 
     return (
       <div className="px-4">
-        <i className="icon-fw icon-ban mb-2"></i>{ t('user_management.deactivate_account') }
-        <p className="alert alert-danger">{ t('user_management.your_own') }</p>
+        <i className="icon-fw icon-ban mb-2"></i>{t('admin:user_management.user_table.deactivate_account')}
+        <p className="alert alert-danger">{t('admin:user_management.user_table.your_own')}</p>
       </div>
     );
   }
 
   render() {
     const { user } = this.props;
-    const me = this.props.appContainer.me;
+    const { currentUsername } = this.props.appContainer;
 
     return (
       <Fragment>
-        {user.username !== me ? this.renderSuspendedBtn()
+        {user.username !== currentUsername ? this.renderSuspendedBtn()
           : this.renderSuspendedAlert()}
       </Fragment>
     );

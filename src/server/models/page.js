@@ -9,6 +9,7 @@ const urljoin = require('url-join');
 const mongoose = require('mongoose');
 const mongoosePaginate = require('mongoose-paginate-v2');
 const uniqueValidator = require('mongoose-unique-validator');
+const differenceInYears = require('date-fns/differenceInYears');
 
 const { pathUtils } = require('growi-commons');
 const templateChecker = require('@commons/util/template-checker');
@@ -39,9 +40,9 @@ const pageSchema = new mongoose.Schema({
   grantedUsers: [{ type: ObjectId, ref: 'User' }],
   grantedGroup: { type: ObjectId, ref: 'UserGroup', index: true },
   creator: { type: ObjectId, ref: 'User', index: true },
-  lastUpdateUser: { type: ObjectId, ref: 'User', index: true },
-  liker: [{ type: ObjectId, ref: 'User', index: true }],
-  seenUsers: [{ type: ObjectId, ref: 'User', index: true }],
+  lastUpdateUser: { type: ObjectId, ref: 'User' },
+  liker: [{ type: ObjectId, ref: 'User' }],
+  seenUsers: [{ type: ObjectId, ref: 'User' }],
   commentCount: { type: Number, default: 0 },
   extended: {
     type: String,
@@ -213,7 +214,7 @@ class PageQueryBuilder {
     return this;
   }
 
-  addConditionToFilteringByViewer(user, userGroups, showAnyoneKnowsLink, showPagesRestrictedByOwner, showPagesRestrictedByGroup) {
+  addConditionToFilteringByViewer(user, userGroups, showAnyoneKnowsLink = false, showPagesRestrictedByOwner = false, showPagesRestrictedByGroup = false) {
     const grantConditions = [
       { grant: null },
       { grant: GRANT_PUBLIC },
@@ -486,6 +487,10 @@ module.exports = function(crowi) {
     if (grant === GRANT_USER_GROUP) {
       this.grantedGroup = grantUserGroupId;
     }
+  };
+
+  pageSchema.methods.getContentAge = function() {
+    return differenceInYears(new Date(), this.updatedAt);
   };
 
 
@@ -827,6 +832,27 @@ module.exports = function(crowi) {
   }
 
   /**
+   * Add condition that filter pages by viewer
+   *  by considering Config
+   *
+   * @param {PageQueryBuilder} builder
+   * @param {User} user
+   * @param {boolean} showAnyoneKnowsLink
+   */
+  async function addConditionToFilteringByViewerToEdit(builder, user) {
+    validateCrowi();
+
+    // determine UserGroup condition
+    let userGroups = null;
+    if (user != null) {
+      const UserGroupRelation = crowi.model('UserGroupRelation');
+      userGroups = await UserGroupRelation.findAllUserGroupIdsRelatedToUser(user);
+    }
+
+    return builder.addConditionToFilteringByViewer(user, userGroups, false, false, false);
+  }
+
+  /**
    * export addConditionToFilteringByViewerForList as static method
    */
   pageSchema.statics.addConditionToFilteringByViewerForList = addConditionToFilteringByViewerForList;
@@ -1033,7 +1059,7 @@ module.exports = function(crowi) {
     builder.addConditionToExcludeRedirect();
 
     // add grant conditions
-    await addConditionToFilteringByViewerForList(builder, user);
+    await addConditionToFilteringByViewerToEdit(builder, user);
 
     // get all pages that the specified user can update
     const pages = await builder.query.exec();
