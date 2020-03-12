@@ -13,6 +13,7 @@ import Editor from './PageEditor/Editor';
 import Preview from './PageEditor/Preview';
 import scrollSyncHelper from './PageEditor/ScrollSyncHelper';
 import EditorContainer from '../services/EditorContainer';
+import WebsocketContainer from '../services/WebsocketContainer';
 
 const logger = loggerFactory('growi:PageEditor');
 
@@ -290,6 +291,7 @@ class PageEditor extends React.Component {
       <div className="row">
         <div className="col-md-6 col-sm-12 page-editor-editor-container">
           <Editor
+            websocketContainer={this.props.websocketContainer}
             ref={(c) => { this.editor = c }}
             value={this.state.markdown}
             noCdn={noCdn}
@@ -324,13 +326,14 @@ class PageEditor extends React.Component {
  * Wrapper component for using unstated
  */
 const PageEditorWrapper = (props) => {
-  return createSubscribedElement(PageEditor, props, [AppContainer, PageContainer, EditorContainer]);
+  return createSubscribedElement(PageEditor, props, [AppContainer, PageContainer, EditorContainer, WebsocketContainer]);
 };
 
 PageEditor.propTypes = {
   appContainer: PropTypes.instanceOf(AppContainer).isRequired,
   pageContainer: PropTypes.instanceOf(PageContainer).isRequired,
   editorContainer: PropTypes.instanceOf(EditorContainer).isRequired,
+  websocketContainer: PropTypes.instanceOf(WebsocketContainer).isRequired,
 };
 
 export default PageEditorWrapper;

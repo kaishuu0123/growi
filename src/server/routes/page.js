@@ -172,7 +172,6 @@ module.exports = function(crowi, app) {
     crowi.getIo().sockets.emit('page:delete', { page, user, socketClientId });
   });
 
-
   function serializeToObj(page) {
     const returnObj = page.toObject();
     if (page.revisionHackmdSynced != null && page.revisionHackmdSynced._id != null) {

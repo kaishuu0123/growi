@@ -93,7 +93,7 @@ class CrowiDev {
    */
   setupExpressAfterListening(app) {
     this.setupHeaderDebugger(app);
-    this.setupBrowserSync(app);
+    // this.setupBrowserSync(app);
   }
 
   setupHeaderDebugger(app) {

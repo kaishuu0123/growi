@@ -73,6 +73,9 @@ function Crowi(rootdir) {
     tag: new (require(`${self.eventsDir}tag`))(this),
     admin: new (require(`${self.eventsDir}admin`))(this),
   };
+
+
+  this.socketIOServers = {};
 }
 
 Crowi.prototype.init = async function() {
@@ -385,7 +388,26 @@ Crowi.prototype.start = async function() {
 
   // setup WebSocket
   const io = require('socket.io')(serverListening);
+  const ot = require('ot-es.js');
   io.sockets.on('connection', (socket) => {
+    socket.on('ot:connect', (data) => {
+      const { pageId, pageContent, username } = data;
+      logger.info(this.socketIOServers[pageId]);
+      if (this.socketIOServers[pageId]) {
+        this.socketIOServers[pageId].addClient(socket);
+      }
+      else {
+        this.socketIOServers[pageId] = new ot.EditorSocketIOServer(pageContent, [], pageId, ((socket, cb) => {
+          cb(!!socket.mayEdit);
+        }));
+
+        this.socketIOServers[pageId].addClient(socket);
+      }
+
+      socket.mayEdit = true;
+      this.socketIOServers[pageId].setName(socket, username);
+      logger.info(this.socketIOServers);
+    });
   });
   this.io = io;
 
