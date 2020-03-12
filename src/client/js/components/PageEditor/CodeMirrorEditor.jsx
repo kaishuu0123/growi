@@ -146,12 +146,13 @@ export default class CodeMirrorEditor extends AbstractEditor {
     const CodeMirrorAdapter = ot.CodeMirrorAdapter;
 
     const socket = this.props.websocketContainer.getWebSocket();
-    // const { pageContainer } = this.props;
-    // const { pageId } = pageContainer.state;
+    const { currentUser } = this.props.websocketContainer.appContainer;
+    const pageContainer = this.props.websocketContainer.appContainer.getContainer('PageContainer');
+
     socket.emit('ot:connect', {
-      pageId: 'Hoge',
+      pageId: pageContainer.pageId,
       pageContent: this.state.value,
-      username: 'HOGEFUGA',
+      username: currentUser.username,
     });
 
 
